@@ -117,13 +117,13 @@ sudo firewall-cmd --add-masquerade --permanent
 
 Kubernetes makes extensive use of DNS entries both forward and reverse lookups. In order to function properly the hosts have to be able to resolve their hostnames. This requires A records in your DNS system. In most systems, including PFSense, you can ensure this works with a Host Override:
 
-![host_override.png](/host_override.png)
+![host_override.png](host_override.png)
 
 If you are making a cluster that has more than 1 node, you will have to set up a load balancer (such as HAProxy) and adjust the DNS accordingly.
 
 Additionally, it is a standard practice to have a wild card DNS entry for a specific sub-domain so that regardless of the service or the application you are using, it will always resolve. In PFSense, this can be done in the Custom Options section of the DNS Resolver:
 
-![pfsense_custom_options.png](/pfsense_custom_options.png)
+![pfsense_custom_options.png](pfsense_custom_options.png)
 
 
 > **DO NOT** skip DNS resolution, both forward and reverse. It will cause you untold problems for a significant portion of the components in K8S
