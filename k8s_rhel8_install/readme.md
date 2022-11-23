@@ -216,17 +216,7 @@ networking:
    dnsDomain: cluster.local
    podSubnet: 10.16.0.0/16
    serviceSubnet: 10.96.0.0/12
-
-controllerManager:
-    extraArgs:
-      bind-address: 0.0.0.0
-scheduler:
-    extraArgs:
-      bind-address: 0.0.0.0
----
-apiVersion: "kubeproxy.config.k8s.io/v1alpha1"
-kind: KubeProxyConfiguration
-metricsBindAddress: 0.0.0.0' > kubeadmcfg.conf
+' > kubeadmcfg.conf
 
 ```
 
