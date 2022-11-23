@@ -177,7 +177,7 @@ This is usefull to get an idea of how the file might be laid out. The [official 
 
 Below is the configuration that this lab used to successfully deploy a Kubernetes cluster.
 
-> the `bind-address` and `listen-metrics-urls` needed to be adjusted from the default in order to allow the Prometheus agents to scrape metrics. By default, most things are listening on `localhost` only.
+> the `listen-metrics-urls` needed to be adjusted from the default in order to allow the Prometheus agents to scrape metrics. By default, **most** things are listening on `localhost` only.
 {.is-success}
 
 
