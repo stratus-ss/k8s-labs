@@ -246,10 +246,6 @@ kubeadm init --config=/root/kubeadmcfg.conf
 > `alias kubecon='kubectl config set-context --current --namespace'`
 {.is-warning}
 
-If you are running a single node, you need to remove the `control-plane` taint so that pods can be scheduled on it...
-```
-kubectl taint nodes --all node-role.kubernetes.io/control-plane-
-```
 
 ### Install OVN
 
