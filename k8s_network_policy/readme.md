@@ -233,7 +233,7 @@ spec:
 ```
 
 The results should look something like this:
-![k8s_tmux_default_deny.png](k8s_tmux_default_deny.png)echo 'kind: NetworkPolicy
+![k8s_tmux_default_deny.png](k8s_tmux_default_deny.png)
 
 From the above you can see that all traffic into the namespace is being blocked. Because the script is calling the Ingress route, all connections are being processed by the ingress rule we just created. 
 
