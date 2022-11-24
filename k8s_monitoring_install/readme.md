@@ -87,7 +87,7 @@ If you curl the ingress you just created you should see a positive response:
 
 However, if you try from a browser:
 
-![unable_connect_prom.png](/unable_connect_prom.png)
+![unable_connect_prom.png](unable_connect_prom.png)
 
 
 What do you think the problem is? Containers and Kubernetes are not magic! Do not forget your traditional linux administration troubleshooting!
@@ -97,12 +97,12 @@ What do you think the problem is? Containers and Kubernetes are not magic! Do no
 
 Once the connection to the pod has been confirmed you should be able to access Prometheus' web UI:
 
-![k8s_prom_ui1.png](/k8s_prom_ui1.png)
+![k8s_prom_ui1.png](k8s_prom_ui1.png)
 
 Navigate to the Targets section of Prometheus and ensure that Prometheus is configured correctly:
 
-![k8s_prom_ui2.png](/k8s_prom_ui2.png)
-![k8s_prom_targets.png](/k8s_prom_targets.png)
+![k8s_prom_ui2.png](k8s_prom_ui2.png)
+![k8s_prom_targets.png](k8s_prom_targets.png)
 
 Unfortunately it looks like the following services are having connection problems:
 
@@ -128,8 +128,8 @@ If you do need to reset your environment, after you have run `kubeadm --init` co
 
 At this point you have likely solved the Kube Scheduler, Proxy and Controller Manager issues. The UI likely shows the following problems
 
-![k8s_prom_target_etcd.png](/k8s_prom_target_etcd.png)
-![k8s_prom_target_node_exporter.png](/k8s_prom_target_node_exporter.png)
+![k8s_prom_target_etcd.png](k8s_prom_target_etcd.png)
+![k8s_prom_target_node_exporter.png](k8s_prom_target_node_exporter.png)
 
 There are two problems remaining. One related to the cluster setup somehow (ETCD) and one component (node-exporter) that is controlled via the helm chart we are using.
 
