@@ -4,8 +4,9 @@ By default kubernetes allows communication between all applications in the clust
 
 This lab was originally developed by my colleague at Red Hat Robert Bohne. I adapted it for vanilla Kubernetes with the OVN plugin.
 
+> **Note**
 > The following is a lab-style document. As such, you should not expect everything to work immediately. There will be some investigation involved.
-{.is-warning}
+
 
 
 ## App Setup
