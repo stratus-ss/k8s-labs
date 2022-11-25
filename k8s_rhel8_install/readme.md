@@ -91,27 +91,6 @@ sudo firewall-cmd --zone=public --add-port=30000-32767/tcp --permanent
 sudo firewall-cmd --reload
 ```
 
-```
-# The below are additional Firewall rules that should be discovered in the LAB
-# Set the firewall basics
-sudo firewall-cmd --zone=public --add-port=9100/tcp --permanent
-
-sudo firewall-cmd --zone=public --add-service=https --permanent
-sudo firewall-cmd --zone=public --add-service=http --permanent
-
-# this is for etcd metrics
-sudo firewall-cmd --zone=public --add-port=2381/tcp --permanent
-sudo firewall-cmd --add-masquerade --permanent
-
-```
-
-> It's very important that the following shows "yes"
-> ```
-> [root@rhel8-k8s ~]# firewall-cmd --list-all |grep masq
->   masquerade: no
-> ```
-> If it does not (like above), external DNS resolution will fail
-{.is-warning}
 
 ### DNS
 
@@ -125,10 +104,8 @@ Additionally, it is a standard practice to have a wild card DNS entry for a spec
 
 ![pfsense_custom_options.png](pfsense_custom_options.png)
 
-
+> **Warning**
 > **DO NOT** skip DNS resolution, both forward and reverse. It will cause you untold problems for a significant portion of the components in K8S
-{.is-danger}
-
 
 
 ### Add Modules and Sysctls
