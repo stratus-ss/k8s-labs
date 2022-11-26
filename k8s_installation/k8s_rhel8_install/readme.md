@@ -118,7 +118,7 @@ After this, you will want to create the file `/etc/dnsmasq.d/local_dns.conf` wit
 server=<original nameserver>
 
 # This is the wild card handling for your vm
-address=/k8s.lab/<vm ip>
+address=/k3s.lab/<vm ip>
 ```
 
 Restart DNSMasq:
