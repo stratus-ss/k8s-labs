@@ -91,8 +91,58 @@ sudo firewall-cmd --zone=public --add-port=30000-32767/tcp --permanent
 sudo firewall-cmd --reload
 ```
 
+### DNS - DNSMasq
 
-### DNS
+For this lab, we will be using DNSMasq as it's easy to get setup and requires minimal configuration.
+
+Install DNSMasq:
+
+```
+dnf install -y dnsmasq
+```
+
+After it is installed, you will want to make a small modification to your `/etc/resolv.conf`. Comment out and make note of the `nameserver` address that exists.
+
+Replace it with your VMs IP address. In my case my `resolv.conf` looks like this:
+
+```
+search stratus.lab stratus.local k3s.local
+#nameserver 192.168.99.7
+nameserver 192.168.99.45
+```
+
+After this, you will want to create the file `/etc/dnsmasq.d/local_dns.conf` with the following contents:
+
+```
+# This is the server to forward dns querries to
+server=<original nameserver>
+
+# This is the wild card handling for your vm
+address=/k8s.lab/<vm ip>
+```
+
+Restart DNSMasq:
+
+```
+systemctl restart dnsmasq
+```
+
+Finally, you need to open the firewall port for DNS to ensure that you can use DNSMasq outside of your vm (for instance from your laptop)
+
+```
+firewall-cmd --add-service=dns --permanent
+firewall-cmd --reload
+```
+
+At this point your vm has been setup for wild card dns.
+
+> **Note**
+> You still need to configure your client (laptop) to make use of the vms dns. There are too many clients to document this process here. You will need to know how to set your own DNS settings.
+
+<details>
+<summary><b>ALTERNATIVE</b> PFSense Configuration</summary>
+
+### Alternative DNS - PFSense
 
 Kubernetes makes extensive use of DNS entries both forward and reverse lookups. In order to function properly the hosts have to be able to resolve their hostnames. This requires A records in your DNS system. In most systems, including PFSense, you can ensure this works with a Host Override:
 
@@ -103,9 +153,14 @@ If you are making a cluster that has more than 1 node, you will have to set up a
 Additionally, it is a standard practice to have a wild card DNS entry for a specific sub-domain so that regardless of the service or the application you are using, it will always resolve. In PFSense, this can be done in the Custom Options section of the DNS Resolver:
 
 ![pfsense_custom_options.png](pfsense_custom_options.png)
+</details>
+
+
 
 > **Warning**
 > **DO NOT** skip DNS resolution, both forward and reverse. It will cause you untold problems for a significant portion of the components in K8S
+
+
 
 
 ### Add Modules and Sysctls
