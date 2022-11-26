@@ -1,14 +1,6 @@
-# scratch notes
-
-Keycloak install from here: https://fabianlee.org/2022/09/10/kubernetes-keycloak-iam-deployed-into-kubernetes-cluster-for-oauth2-oidc/
-
-SSL San info from here: https://stackoverflow.com/questions/64814173/how-do-i-use-sans-with-openssl-instead-of-common-name
-
-User Kubeconfig hints here: https://medium.com/@int128/kubectl-with-openid-connect-43120b451672
-
 # Introduction
 
-Once Kubernetes is setup and has some basic configuration, one of the first steps that administrators take is to secure the platform. As part of this, some form of centralized authentication is desireable. There are a lot of options to accomplish this. In this lab we are going to look at Keycloak which says that 
+Once Kubernetes is setup and has some basic configuration, one of the first steps that administrators take is to secure the platform. As part of this, some form of centralized authentication is desirable. There are a lot of options to accomplish this. In this lab we are going to look at Keycloak which says that 
 
 > Keycloak provides user federation, strong authentication, user management, fine-grained authorization, and more. 
 
@@ -55,7 +47,7 @@ prefix=keycloak.k3s.lab
 ./selfsigned_openssl.sh $prefix
 ```
 
-In order for Linux tooling to trust the self-signed certicates, you have to add them into the system trust store. The default Kubernetes certificates are not trusted by default. So on top of the self signed cert we just generated we are going to add the K8S certs to the trust store as well. 
+In order for Linux tooling to trust the self-signed certificates, you have to add them into the system trust store. The default Kubernetes certificates are not trusted by default. So on top of the self signed cert we just generated we are going to add the K8S certs to the trust store as well. 
 Add the certs into the ca-trust store:
 
 ```
@@ -74,7 +66,7 @@ kubectl create -n default secret tls tls-credential --key=/tmp/$prefix.key --cer
 
 We have laid the foundation for Keycloak authentication. However, in order to allow us to login to Kubernetes with the user that will be created in Keycloak, we have to update the kubeapi. While we could potentially have done this during the installation, adding Open ID Connect (oidc) information does not require a re-installation, instead it can be added directly into the YAML file.
 
-You can update the `kube-apiserver.yaml` file to include the OIDC information manually, or you can use the snippet below to do it for you. The required edits goes bleow the `--tls` options in the `kube-apiserver.yaml` file.
+You can update the `kube-apiserver.yaml` file to include the OIDC information manually, or you can use the snippet below to do it for you. The required edits goes below the `--tls` options in the `kube-apiserver.yaml` file.
 
 ```
 cat << EOL > temp_oidc_settings.txt
@@ -178,8 +170,7 @@ After you have figured out the ingress YAML, create the ingress object in Kubern
 kubectl create -f keycloak-ingress.yaml
 ```
 
-
-Get the poststart script and the json files (replace the urls in the post file)
+Keycloak has a command line utility available inside of the pod. In order to facilitate the easy creation of realm, users and roles we are going to make use of it when the pod starts for the first time. As mentioned earlier, Fabian Lee has created some bootstrap style files we are going to borrow. However, we need to replace the URLs inside of the client definition so that we don't need to use the UI to edit them later. Get the poststart script and the json files from Github:
 
 ```
 curl -s https://raw.githubusercontent.com/fabianlee/blogcode/master/keycloak/myclient.exported.json |sed "s/keycloak\.kubeadm\.local/$prefix/g" > myclient.exported.json
@@ -189,7 +180,7 @@ wget https://raw.githubusercontent.com/fabianlee/blogcode/master/keycloak/postst
 kubectl create configmap keycloak-configmap --from-file=poststart.sh --from-file=myclient.exported.json
 ```
 
-While we have, so far, been creating individual YAML files for each object we have been creating, you can combine them into one file. The below file defintes a `service` and a `deployment` in the same file. The deployment section has a lifecycle hook to create users the first time container is created:
+While we have, so far, been creating individual YAML files for each object we have been creating, you can combine them into one file. The below file defines a `service` and a `deployment` in the same file. The deployment section has a lifecycle hook to create users the first time container is created:
 
 ```
 cat << EOL > keycloak.yaml
@@ -371,7 +362,7 @@ https://keycloak.k3s.lab/realms/myrealm#first last
 
 ## A Look At Permissions
 
-You should now be running commands as the user from keycloak. However, you need to actually allow the user to perform actions against the cluster. To do so, create the Role Based Acceess Controls (RBAC) and make the user cluster-admin
+You should now be running commands as the user from keycloak. However, you need to actually allow the user to perform actions against the cluster. To do so, create the Role Based Access Controls (RBAC) and make the user cluster-admin
 
 ```
 cat << EOL > cluster-admin.yaml
