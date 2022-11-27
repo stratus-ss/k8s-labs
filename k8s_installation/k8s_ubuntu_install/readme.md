@@ -22,7 +22,7 @@ sudo hostnamectl set-hostname ubuntu-k8s.k3s.lab
 ```
 
 ### Setup Tooling
-For the purposes of brevity, I am going to assume you know how to create a VM in your hypervisor and you know how to install RHEL 8. After the VM has been installed and registered start by getting the CRIO repo:
+For the purposes of brevity, I am going to assume you know how to create a VM in your hypervisor and you know how to install Ubuntu 22.04. After the VM has been installed and registered start by getting the CRIO repo:
 
 ```
 OS=xUbuntu_20.04
@@ -366,15 +366,15 @@ NAMESPACE            NAME                                            READY   STA
 ingress-controller   haproxy-ingress-84f5c464f7-9mcxv                1/1     Running   0          25s
 kube-system          coredns-565d847f94-2dtg7                        1/1     Running   0          3m39s
 kube-system          coredns-565d847f94-mkn68                        1/1     Running   0          3m34s
-kube-system          etcd-rhel8-k8s.stratus.lab                      1/1     Running   1          5m43s
-kube-system          kube-apiserver-rhel8-k8s.stratus.lab            1/1     Running   1          5m43s
-kube-system          kube-controller-manager-rhel8-k8s.stratus.lab   1/1     Running   1          5m44s
+kube-system          etcd-ubuntu-k8s.stratus.lab                      1/1     Running   1          5m43s
+kube-system          kube-apiserver-ubuntu-k8s.stratus.lab            1/1     Running   1          5m43s
+kube-system          kube-controller-manager-ubuntu-k8s.stratus.lab   1/1     Running   1          5m44s
 kube-system          kube-ovn-cni-xhp4v                              1/1     Running   0          4m15s
 kube-system          kube-ovn-controller-6c4574d875-d8fxq            1/1     Running   0          4m15s
 kube-system          kube-ovn-monitor-867645b9d9-4tss4               1/1     Running   0          4m15s
 kube-system          kube-ovn-pinger-6wrdz                           1/1     Running   0          3m27s
 kube-system          kube-proxy-g4dh9                                1/1     Running   0          5m29s
-kube-system          kube-scheduler-rhel8-k8s.stratus.lab            1/1     Running   1          5m42s
+kube-system          kube-scheduler-ubuntu-k8s.stratus.lab            1/1     Running   1          5m42s
 kube-system          ovn-central-546d6fd469-7dttd                    1/1     Running   0          4m32s
 kube-system          ovs-ovn-f4cnq                                   1/1     Running   0          4m32s
 ```
