@@ -269,36 +269,89 @@ kubeadm init --config=/root/kubeadmcfg.conf
 {.is-warning}
 
 
-### Install OVN
+### Install Networking Components
 
 Install a CNI, in this case, we are using OVN. The [official installation documentation](https://github.com/kubeovn/kube-ovn/blob/master/docs/install.md) recommends using their script for installation. Normally it is not recommended to simply run a script from the internet, so in this case we are going to download and rename it so we know exactly what the script is for. This lab has ensured that it was installed with the expected values for POD_CIDR, SVC_CIDR and JOIN_CIDR. If you are planning to change any of these cider ranges, you will need to edit the variables inside the script in order to have a successful deployment of OVN.
 ```
 wget https://raw.githubusercontent.com/kubeovn/kube-ovn/release-1.10/dist/images/install.sh
 mv install.sh ovn-install.sh
-sh ovn-install.sh 
+chmod +x ovn-install.sh 
+./ovn-install.sh
 ```
 
 Finally setup the ingress controller. IN this case HAProxy has a helm chart, which is essentially a cloud-native scripting language for Kubernetes compatible clusters. An understanding of Helm is outside the scope of this lab, but it does have the option to pass in a file as an option. This file can be used to add or override values that your cluster needs to run effectively. In this case we need to make sure that HAProxy is using the `hostNetwork`:
 ```
-cat <<EOF | sudo tee ~/haproxy-ingress-values.yaml
+cat <<EOF | tee ~/haproxy-ingress-values.yaml
 controller:
   hostNetwork: true
 EOF
 
 curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-sh get_helm.sh
+chmod +x get_helm.sh
+./get_helm.sh
 helm repo add haproxy-ingress https://haproxy-ingress.github.io/charts
 helm repo update
 helm install haproxy-ingress haproxy-ingress/haproxy-ingress  --create-namespace --namespace ingress-controller  --version 0.13.9  -f haproxy-ingress-values.yaml
+```
+
+When you look at the cluster with the following command:
 
 ```
+kubectl get pods -A
+```
+
+You might notice the HAProxy pod in a `Pending` state:
+
+```
+NAMESPACE            NAME                                         READY   STATUS    RESTARTS   AGE
+ingress-controller   haproxy-ingress-84f5c464f7-r4ktt             0/1     Pending   0          18s
+```
+
+You can use the following command in a given namespace to help you figure out why something might not be working:
+
+```
+kubectl get events --sort-by=.metadata.creationTimestamp
+```
+
+In HAProxy's case, you see the following:
+
+```
+LAST SEEN   TYPE      REASON              OBJECT                                  MESSAGE
+6m8s        Warning   FailedScheduling    pod/haproxy-ingress-84f5c464f7-r4ktt    0/1 nodes are available: 1 node(s) had untolerated taint {node-role.kubernetes.io/control-plane: }. preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+```
+
+By default the `control-plane` nodes, which host the API, Scheduler etc, are not meant to handle user workloads. See if you can figure out how to remove the taint.
+
+<details>
+  <summary><b>Hints and Spoilers</b></summary>
+  <details>
+    <summary><b>HINT: kubectl taint</b></summary>
+    <code>kubectl</code> has a taint command. the taint you want to remove is <code>node-role.kubernetes.io/control-plane</code>
+  </details>
+  <details>
+    <summary><b>SPOILER: kubectl taint</b></summary>
+    Run the following command to remove this taint off any node in the cluster
+
+```
+kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+```
+
+    Or this command to remove it off a specific node:
+
+```
+kubectl taint nodes rhel8-k8s.k3s.lab node-role.kubernetes.io/control-plane-
+```
+  </details>
+  </details>
+
+## Wrap Up
 
 At this point if you have not encountered any errors and you have added the requesite lines to your `~/.bashrc` you should be able to see the pods running in your cluster:
 
 ```
 [root@rhel8-k8s ~]# kubectl get pods -A
 NAMESPACE            NAME                                            READY   STATUS    RESTARTS   AGE
-ingress-controller   haproxy-ingress-84f5c464f7-9mcxv                1/1     Running   0          25s
+ingress-controller   haproxy-ingress-84f5c464f7-r4ktt                1/1     Running   0          25s
 kube-system          coredns-565d847f94-2dtg7                        1/1     Running   0          3m39s
 kube-system          coredns-565d847f94-mkn68                        1/1     Running   0          3m34s
 kube-system          etcd-rhel8-k8s.stratus.lab                      1/1     Running   1          5m43s
