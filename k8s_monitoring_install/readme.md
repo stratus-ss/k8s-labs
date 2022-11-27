@@ -7,6 +7,7 @@ Having a cluster is great. After completing the installation on a RHEL 8 host, t
 
 > **Warning**
 > The following is a lab-style document. As such, you should not expect everything to work immediately. There will be some investigation involved.
+{.is-danger}
 
 
 
@@ -151,7 +152,7 @@ For the Node Exporter, assume that the helm chart installed and configured the c
       In order to examin the tains on a node you can run
 
   ```
-      kubectl describe node rhel8-k8s.stratus.lab |grep Taint
+      kubectl describe node rhel8-k8s.k3s.lab |grep Taint
   ```
 
   </details>
@@ -174,11 +175,19 @@ kubectl taint nodes --all node-role.kubernetes.io/control-plane-
   <details>
     <summary><b>SPOILER 2: Troubleshoot Browser Connection</b></summary>
     You can try scanning the ports with something like *nmap* from your laptop or an external host. You should discover that port 80 **and** 443 are missing from the scan. Open them in the firewall and try again. You should now be able to connect from your browser.
+		For RHEL based systems:
     
 ```
 sudo firewall-cmd --zone=public --add-service=https --permanent
 sudo firewall-cmd --zone=public --add-service=http --permanent
 sudo firewall-cmd --reload
+```
+    
+For Ubuntu:
+
+```
+sudo ufw allow 443/tcp
+sudo ufw allow 80/tcp
 ```
   </details>
 	<details>
@@ -193,7 +202,7 @@ sudo firewall-cmd --reload
 apiVersion: "kubeadm.k8s.io/v1beta3"
 kind: InitConfiguration
 nodeRegistration:
-    name: rhel8-k8s.stratus.lab
+    name: rhel8-k8s.k3s.lab
 localAPIEndpoint:
     advertiseAddress: 192.168.99.45
 ---
@@ -206,9 +215,9 @@ etcd:
     peerCertSANs:
     - "192.168.99.45"
     extraArgs:
-      initial-cluster: rhel8-k8s.stratus.lab=https://192.168.99.45:2380
+      initial-cluster: rhel8-k8s.k3s.lab=https://192.168.99.45:2380
       initial-cluster-state: new
-      name: rhel8-k8s.stratus.lab
+      name: rhel8-k8s.k3s.lab
       listen-peer-urls: https://192.168.99.45:2380
       listen-client-urls: https://192.168.99.45:2379
       advertise-client-urls: https://192.168.99.45:2379
@@ -256,10 +265,22 @@ kubeEtcd:
 #if you need to remove the helm chart run the following
 helm uninstall --namespace prom prom-stack
 kubectl create ns prom
-helm install   --namespace prom -f prom_custom_values.yaml   prom-stack prometheus-community/kube-prometheus-stack
+helm install   --namespace prom prom-stack -f prom_custom_values.yaml   prom-stack prometheus-community/kube-prometheus-stack
+```
+
+The firewall on RHEL based systems:
+
+```
 sudo firewall-cmd --zone=public --add-port=2381/tcp --permanent
 sudo firewall-cmd --reload
 ```
+
+For Ubuntu:
+
+```
+sudo ufw allow 2381/tcp
+```
+
   </details>
   <details>
     <summary><b>Hint 5: Node Exporter</b></summary>
@@ -268,9 +289,17 @@ sudo firewall-cmd --reload
   <details>
     <summary><b>SPOILER 5: Node Exporter</b></summary>
     As with the browser connection problem, the issue is with the firewall. You need to open port 9100 so that prometheus can connect to the node-exporter
+
+For RHEL based systems:
     
 ```
 sudo firewall-cmd --zone=public --add-port=9100/tcp --permanent
 sudo firewall-cmd --reload
+```
+
+For Ubuntu:
+
+```
+sudo ufw allow 9100/tcp
 ```
   </details>
