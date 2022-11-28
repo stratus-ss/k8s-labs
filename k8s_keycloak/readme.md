@@ -48,7 +48,7 @@ prefix=keycloak.k3s.lab
 ```
 
 In order for Linux tooling to trust the self-signed certificates, you have to add them into the system trust store. The default Kubernetes certificates are not trusted by default. So on top of the self signed cert we just generated we are going to add the K8S certs to the trust store as well. 
-Add the certs into the ca-trust store:
+Add the certs into the ca-trust store in RHEL 8:
 
 ```
 cp /tmp/$prefix.{pem,key} /etc/pki/tls/certs/
@@ -56,10 +56,18 @@ cp /etc/kubernetes/pki/ca.crt /etc/pki/tls/certs/
 update-ca-trust
 ```
 
+For Ubuntu you need to do something slightly different:
+
+```
+cp /tmp/$prefix.pem  /usr/local/share/ca-certificates/$prefix.crt
+cp /etc/kubernetes/pki/ca.crt /usr/local/share/ca-certificates/k8s-ca.crt
+update-ca-certificates
+```
+
 In order for applications inside of Kubernetes to make use of the certificates, we are going to create a secret to hold both the key and certificate. Use the following command to create the secret:
 
 ```
-kubectl create -n default secret tls tls-credential --key=/tmp/$prefix.key --cert=/tmp/$prefix.pem
+kubectl create -n kube-system secret tls tls-credential --key=/tmp/$prefix.key --cert=/tmp/$prefix.pem
 ```
 
 ## Updating The KubeAPI
@@ -67,6 +75,8 @@ kubectl create -n default secret tls tls-credential --key=/tmp/$prefix.key --cer
 We have laid the foundation for Keycloak authentication. However, in order to allow us to login to Kubernetes with the user that will be created in Keycloak, we have to update the kubeapi. While we could potentially have done this during the installation, adding Open ID Connect (oidc) information does not require a re-installation, instead it can be added directly into the YAML file.
 
 You can update the `kube-apiserver.yaml` file to include the OIDC information manually, or you can use the snippet below to do it for you. The required edits goes below the `--tls` options in the `kube-apiserver.yaml` file.
+
+For RHEL 8 create the following file:
 
 ```
 cat << EOL > temp_oidc_settings.txt
@@ -76,8 +86,22 @@ cat << EOL > temp_oidc_settings.txt
     - --oidc-groups-claim=groups
     - --oidc-ca-file=/etc/pki/tls/certs/keycloak.k3s.lab.pem
 EOL
+```
+
+For Ubuntu:
+
+```
+cat << EOL > temp_oidc_settings.txt
+    - --oidc-issuer-url=https://keycloak.k3s.lab/realms/myrealm
+    - --oidc-client-id=myclient
+    - --oidc-username-claim=name
+    - --oidc-groups-claim=groups
+    - --oidc-ca-file=/usr/local/share/ca-certificates/keycloak.k3s.lab.crt
+EOL
+```
 
 
+```
 sed -i '/    - --tls-private-key-file=\/etc\/kubernetes\/pki\/apiserver.key/rtemp_oidc_settings.txt' /etc/kubernetes/manifests/kube-apiserver.yaml
 ```
 
@@ -142,6 +166,7 @@ metadata:
   labels:
     app: keycloak
   name: keycloak
+  namespace: kube-system
 spec:
   rules:
   - host: keycloak.k3s.lab
@@ -177,7 +202,7 @@ curl -s https://raw.githubusercontent.com/fabianlee/blogcode/master/keycloak/myc
 
 wget https://raw.githubusercontent.com/fabianlee/blogcode/master/keycloak/poststart.sh
 
-kubectl create configmap keycloak-configmap --from-file=poststart.sh --from-file=myclient.exported.json
+kubectl create configmap keycloak-configmap --from-file=poststart.sh --from-file=myclient.exported.json --namespace kube-system
 ```
 
 While we have, so far, been creating individual YAML files for each object we have been creating, you can combine them into one file. The below file defines a `service` and a `deployment` in the same file. The deployment section has a lifecycle hook to create users the first time container is created:
@@ -187,6 +212,7 @@ cat << EOL > keycloak.yaml
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: kube-system
   name: keycloak
   labels:
     app: keycloak
@@ -202,6 +228,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  namespace: kube-system
   name: keycloak
   labels:
     app: keycloak
@@ -265,8 +292,8 @@ kubectl create -f keycloak.yaml
 
 sleep 100
 
-kubectl exec -it deployment/keycloak -n default -c keycloak -- cat /tmp/keycloak.properties
-kubectl exec -it deployment/keycloak -n default -c keycloak -- cat /tmp/keycloak.properties |grep secret |awk -F "=" '{print $2}' > /tmp/client_secret
+kubectl exec -it deployment/keycloak -n kube-system -c keycloak -- cat /tmp/keycloak.properties
+kubectl exec -it deployment/keycloak -n kube-system -c keycloak -- cat /tmp/keycloak.properties |grep secret |awk -F "=" '{print $2}'| sed 's/\r$//' > /tmp/client_secret
 ```
 
 
@@ -319,14 +346,19 @@ kubectl krew install whoami
 
 Now that it is installed, we need get some tokens from Keycloak before we proceed. Remember the `keycloak.properties` we examined way back at the start of the lab? It has a client secret in it that we need. You should be able to find a copy of this client secret in `/tmp/client_secret`. 
 
-> **Warning**
-> If you are using a distribution (like RHEL8) which uses bash 4.x there is some problem with the client secret when attempting to use it from a shell variable. Therefore, you will need to copy and paste the client_secret from the file into the commands below.
+In Ubuntu install the `jq` 
 
 ```
-# for Bash 4.x you need to manually put in the secret value as variable expansion does not work correctly
-ID_TOKEN=$(curl -k -d "grant_type=password" -d "scope=openid" -d "client_id=myclient" -d "client_secret=<insert client_secret>" -d "username=myuser" -d "password=Password1!" https://keycloak.k3s.lab/realms/myrealm/protocol/openid-connect/token |jq .id_token)
+sudo apt install jq -y
+```
 
-REFRESH_TOKEN=$(curl -k -d "grant_type=password" -d "scope=openid" -d "client_id=myclient" -d "client_secret=<insert client_secret>" -d "username=myuser" -d "password=Password1!" https://keycloak.k3s.lab/realms/myrealm/protocol/openid-connect/token |jq .refresh_token)
+You should be able to retrieve your `id_token` and the `refresh_token` from the Keycloak server:
+
+```
+export CLIENT_SECRET=$(cat /tmp/client_secret)
+ID_TOKEN=$(curl -k -d "grant_type=password" -d "scope=openid" -d "client_id=myclient" -d "client_secret=${CLIENT_SECRET}" -d "username=myuser" -d "password=Password1!" https://keycloak.k3s.lab/realms/myrealm/protocol/openid-connect/token |jq .id_token)
+
+REFRESH_TOKEN=$(curl -k -d "grant_type=password" -d "scope=openid" -d "client_id=myclient" -d "client_secret=${CLIENT_SECRET}" -d "username=myuser" -d "password=Password1!" https://keycloak.k3s.lab/realms/myrealm/protocol/openid-connect/token |jq .refresh_token)
 ```
 
 Finally, with the tokens captured, we can finish out kubeconfig:
@@ -423,3 +455,40 @@ subjects:
 ```
 
 This mirrors what we created before. This also demonstrates how important the naming of objects in Kubernetes really is. You can see we called this `oidc-admin-binding` but we had to open it up to know which users were in there. This might be what you want, you could have multiple users in this file, all being authenticated via Keycloak. On the other hand, since this is a test cluster, it might be worth considering a name which describes the user, such as `first-last-from-keycloak`. It's something that can make a big difference for the ongoing understanding of your clusters as they grow.
+
+## Wrap Up
+
+At this point, your user which exists in Keycloak, should have `cluster-admin` in the cluster. You can run at commands you want as this new user:
+
+```
+k8s@ubuntu-k8s:~$ kubectl whoami
+https://keycloak.k3s.lab/realms/myrealm#first last
+
+k8s@ubuntu-k8s:~$ kubectl get nodes
+NAME                 STATUS   ROLES           AGE    VERSION
+ubuntu-k8s.k3s.lab   Ready    control-plane   130m   v1.25.4
+
+k8s@ubuntu-k8s:~$ kubectl get pods -A
+NAMESPACE            NAME                                                     READY   STATUS    RESTARTS      AGE
+ingress-controller   haproxy-ingress-84f5c464f7-xrdrw                         1/1     Running   0             125m
+kube-system          coredns-565d847f94-2ddl4                                 1/1     Running   0             126m
+kube-system          coredns-565d847f94-mpz2h                                 1/1     Running   0             126m
+kube-system          etcd-ubuntu-k8s.k3s.lab                                  1/1     Running   1             130m
+kube-system          keycloak-58cb7bdb68-lngs8                                1/1     Running   0             12m
+kube-system          kube-apiserver-ubuntu-k8s.k3s.lab                        1/1     Running   0             68m
+kube-system          kube-controller-manager-ubuntu-k8s.k3s.lab               1/1     Running   1 (73m ago)   130m
+kube-system          kube-ovn-cni-9d78l                                       1/1     Running   0             126m
+kube-system          kube-ovn-controller-8b798dcb4-m2tf5                      1/1     Running   2 (73m ago)   126m
+kube-system          kube-ovn-monitor-867645b9d9-zr88m                        1/1     Running   0             126m
+kube-system          kube-ovn-pinger-hxr6q                                    1/1     Running   0             124m
+kube-system          kube-proxy-w64mr                                         1/1     Running   0             130m
+kube-system          kube-scheduler-ubuntu-k8s.k3s.lab                        1/1     Running   1 (73m ago)   130m
+kube-system          ovn-central-566c7f748d-ltx6v                             1/1     Running   0             126m
+kube-system          ovs-ovn-frjqp                                            1/1     Running   0             126m
+prom                 alertmanager-prom-stack-kube-prometheus-alertmanager-0   2/2     Running   1 (95m ago)   95m
+prom                 prom-stack-grafana-84578597f-r82hg                       3/3     Running   0             95m
+prom                 prom-stack-kube-prometheus-operator-6b7dc8d969-vdrgk     1/1     Running   0             95m
+prom                 prom-stack-kube-state-metrics-7d59cbd9b-kv9xs            1/1     Running   0             95m
+prom                 prom-stack-prometheus-node-exporter-9clw9                1/1     Running   0             95m
+prom                 prometheus-prom-stack-kube-prometheus-prometheus-0       2/2     Running   0             95m
+```
