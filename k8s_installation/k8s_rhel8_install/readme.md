@@ -336,7 +336,7 @@ By default the `control-plane` nodes, which host the API, Scheduler etc, are not
 kubectl taint nodes --all node-role.kubernetes.io/control-plane-
 ```
 
-    Or this command to remove it off a specific node:
+Or this command to remove it off a specific node:
 
 ```
 kubectl taint nodes rhel8-k8s.k3s.lab node-role.kubernetes.io/control-plane-
