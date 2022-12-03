@@ -296,8 +296,10 @@ export KUBECONFIG=${HOME}/.kube/admin.conf
 > `alias kubecon='kubectl config set-context --current --namespace'`
 {.is-warning}
 
+Due to the adding of libraries the rest of the lab needs to be run as root:
 
 ```
+export KUBECONFIG=/etc/kubernetes/.kube/admin.conf
 wget https://raw.githubusercontent.com/kubeovn/kube-ovn/release-1.10/dist/images/install.sh
 mv install.sh ovn-install.sh
 chmod +x ovn-install.sh 
