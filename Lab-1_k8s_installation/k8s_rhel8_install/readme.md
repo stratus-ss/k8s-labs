@@ -115,7 +115,7 @@ After it is installed, you will want to make a small modification to your `/etc/
 Replace it with your VMs IP address. In my case my `resolv.conf` looks like this:
 
 ```
-search stratus.lab stratus.local k3s.local
+search k3s.lab stratus.local k3s.local
 #nameserver 192.168.99.7
 nameserver <vm ip>
 ```
@@ -227,7 +227,7 @@ echo '---
 apiVersion: "kubeadm.k8s.io/v1beta3"
 kind: InitConfiguration
 nodeRegistration:
-    name: rhel8-k8s.stratus.lab
+    name: rhel8-k8s.k3s.lab
 localAPIEndpoint:
     advertiseAddress: <vm ip>
 ---
@@ -240,9 +240,9 @@ etcd:
     peerCertSANs:
     - "<vm ip>"
     extraArgs:
-      initial-cluster: rhel8-k8s.stratus.lab=https://<vm ip>:2380
+      initial-cluster: rhel8-k8s.k3s.lab=https://<vm ip>:2380
       initial-cluster-state: new
-      name: rhel8-k8s.stratus.lab
+      name: rhel8-k8s.k3s.lab
       listen-peer-urls: https://<vm ip>:2380
       listen-client-urls: https://<vm ip>:2379
       advertise-client-urls: https://<vm ip>:2379
@@ -363,15 +363,15 @@ NAMESPACE            NAME                                            READY   STA
 ingress-controller   haproxy-ingress-84f5c464f7-r4ktt                1/1     Running   0          25s
 kube-system          coredns-565d847f94-2dtg7                        1/1     Running   0          3m39s
 kube-system          coredns-565d847f94-mkn68                        1/1     Running   0          3m34s
-kube-system          etcd-rhel8-k8s.stratus.lab                      1/1     Running   1          5m43s
-kube-system          kube-apiserver-rhel8-k8s.stratus.lab            1/1     Running   1          5m43s
-kube-system          kube-controller-manager-rhel8-k8s.stratus.lab   1/1     Running   1          5m44s
+kube-system          etcd-rhel8-k8s.k3s.lab                      1/1     Running   1          5m43s
+kube-system          kube-apiserver-rhel8-k8s.k3s.lab            1/1     Running   1          5m43s
+kube-system          kube-controller-manager-rhel8-k8s.k3s.lab   1/1     Running   1          5m44s
 kube-system          kube-ovn-cni-xhp4v                              1/1     Running   0          4m15s
 kube-system          kube-ovn-controller-6c4574d875-d8fxq            1/1     Running   0          4m15s
 kube-system          kube-ovn-monitor-867645b9d9-4tss4               1/1     Running   0          4m15s
 kube-system          kube-ovn-pinger-6wrdz                           1/1     Running   0          3m27s
 kube-system          kube-proxy-g4dh9                                1/1     Running   0          5m29s
-kube-system          kube-scheduler-rhel8-k8s.stratus.lab            1/1     Running   1          5m42s
+kube-system          kube-scheduler-rhel8-k8s.k3s.lab            1/1     Running   1          5m42s
 kube-system          ovn-central-546d6fd469-7dttd                    1/1     Running   0          4m32s
 kube-system          ovs-ovn-f4cnq                                   1/1     Running   0          4m32s
 ```
