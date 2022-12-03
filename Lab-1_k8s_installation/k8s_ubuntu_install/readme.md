@@ -284,6 +284,7 @@ Make a `.kube` directory and copy the kubeconfig:
 ```
 mkdir -p ${HOME}/.kube
 sudo cp /etc/kubernetes/admin.conf ${HOME}/.kube
+sudo chown -R k8s.  ${HOME}/.kube
 export KUBECONFIG=${HOME}/.kube/admin.conf
 ```
 
