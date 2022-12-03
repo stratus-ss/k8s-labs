@@ -271,7 +271,7 @@ networking:
 You are finally able to do the base Kubernetes installation!
 
 ```
-kubeadm init --config=~/kubeadmcfg.conf
+kubeadm init --config=${HOME}/kubeadmcfg.conf
 ```
 
 > Important: Don't forget to export the kubeconfig... add it to your `~/.bashrc`
