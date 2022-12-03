@@ -117,7 +117,7 @@ Replace it with your VMs IP address. In my case my `resolv.conf` looks like this
 ```
 search stratus.lab stratus.local k3s.local
 #nameserver 192.168.99.7
-nameserver 192.168.99.45
+nameserver <vm ip>
 ```
 
 After this, you will want to create the file `/etc/dnsmasq.d/local_dns.conf` with the following contents:
@@ -229,24 +229,24 @@ kind: InitConfiguration
 nodeRegistration:
     name: rhel8-k8s.stratus.lab
 localAPIEndpoint:
-    advertiseAddress: 192.168.99.45
+    advertiseAddress: <vm ip>
 ---
 apiVersion: "kubeadm.k8s.io/v1beta3"
 kind: ClusterConfiguration
 etcd:
   local:
     serverCertSANs:
-    - "192.168.99.45"
+    - "<vm ip>"
     peerCertSANs:
-    - "192.168.99.45"
+    - "<vm ip>"
     extraArgs:
-      initial-cluster: rhel8-k8s.stratus.lab=https://192.168.99.45:2380
+      initial-cluster: rhel8-k8s.stratus.lab=https://<vm ip>:2380
       initial-cluster-state: new
       name: rhel8-k8s.stratus.lab
-      listen-peer-urls: https://192.168.99.45:2380
-      listen-client-urls: https://192.168.99.45:2379
-      advertise-client-urls: https://192.168.99.45:2379
-      initial-advertise-peer-urls: https://192.168.99.45:2380
+      listen-peer-urls: https://<vm ip>:2380
+      listen-client-urls: https://<vm ip>:2379
+      advertise-client-urls: https://<vm ip>:2379
+      initial-advertise-peer-urls: https://<vm ip>:2380
       metrics: extensive
       listen-metrics-urls: http://0.0.0.0:2381
 apiServer:
