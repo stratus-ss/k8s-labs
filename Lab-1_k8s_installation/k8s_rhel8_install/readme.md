@@ -20,6 +20,15 @@ sudo curl -L -o /etc/yum.repos.d/devel:kubic:libcontainers:stable:cri-o:$VERSION
 
 CRIO is the container engine that will ultimately run your containerized workload. While Docker can be used, CRIO will be used here as it is part the Cloud Native Computing Foundation and has been the choice of several popular enterprise K8S distributions.
 
+We need to turn off swap as per kubernetes guidance
+
+```
+swapoff -a
+```
+
+Make sure you comment out swap if it is in the `/etc/fstab`
+
+
 We need to add the Kubernetes Repo so that you can install the tooling such as `kubeadm` and `kubectl` which will be used to interact with the cluster:
 
 ```
