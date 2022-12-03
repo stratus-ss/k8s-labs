@@ -133,7 +133,7 @@ Disable `systemd-resolved` and restart DNSMasq:
 ```
 sudo systemctl disable systemd-resolved --now
 cat << EOF |sudo tee /etc/resolv.conf
-nameserver 192.168.99.46
+nameserver <vm ip>
 search stratus.lab stratus.local k3s.lab
 
 EOF
@@ -234,24 +234,24 @@ kind: InitConfiguration
 nodeRegistration:
     name: ubuntu-k8s.k3s.lab
 localAPIEndpoint:
-    advertiseAddress: 192.168.99.45
+    advertiseAddress: <vm ip>
 ---
 apiVersion: "kubeadm.k8s.io/v1beta3"
 kind: ClusterConfiguration
 etcd:
   local:
     serverCertSANs:
-    - "192.168.99.45"
+    - "<vm ip>"
     peerCertSANs:
-    - "192.168.99.45"
+    - "<vm ip>"
     extraArgs:
-      initial-cluster: ubuntu-k8s.k3s.lab=https://192.168.99.45:2380
+      initial-cluster: ubuntu-k8s.k3s.lab=https://<vm ip>:2380
       initial-cluster-state: new
       name: ubuntu-k8s.k3s.lab
-      listen-peer-urls: https://192.168.99.45:2380
-      listen-client-urls: https://192.168.99.45:2379
-      advertise-client-urls: https://192.168.99.45:2379
-      initial-advertise-peer-urls: https://192.168.99.45:2380
+      listen-peer-urls: https://<vm ip>:2380
+      listen-client-urls: https://<vm ip>:2379
+      advertise-client-urls: https://<vm ip>:2379
+      initial-advertise-peer-urls: https://<vm ip>:2380
       metrics: extensive
       listen-metrics-urls: http://0.0.0.0:2381
 apiServer:
