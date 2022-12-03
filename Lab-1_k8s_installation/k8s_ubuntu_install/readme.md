@@ -127,6 +127,9 @@ address=/k3s.lab/<vm ip>
 
 Disable `systemd-resolved` and restart DNSMasq:
 
+> **Warning**
+> Ensure the following command has your ACTUAL VM IP and not the sample provided
+
 ```
 sudo systemctl disable systemd-resolved --now
 cat << EOF |sudo tee /etc/resolv.conf
