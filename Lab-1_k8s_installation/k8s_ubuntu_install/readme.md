@@ -274,18 +274,28 @@ You are finally able to do the base Kubernetes installation!
 sudo kubeadm init --config=${HOME}/kubeadmcfg.conf
 ```
 
+
+### Install Networking Components
+
+Install a CNI, in this case, we are using OVN. The [official installation documentation](https://github.com/kubeovn/kube-ovn/blob/master/docs/install.md) recommends using their script for installation. Normally it is not recommended to simply run a script from the internet, so in this case we are going to download and rename it so we know exactly what the script is for. This lab has ensured that it was installed with the expected values for POD_CIDR, SVC_CIDR and JOIN_CIDR. If you are planning to change any of these cider ranges, you will need to edit the variables inside the script in order to have a successful deployment of OVN.
+
+Make a `.kube` directory and copy the kubeconfig:
+
+```
+mkdir -p ${HOME}/.kube
+sudo cp /etc/kubernetes/admin.conf ${HOME}/.kube
+export KUBECONFIG=${HOME}/.kube/admin.conf
+```
+
 > Important: Don't forget to export the kubeconfig... add it to your `~/.bashrc`
 > ```
-> export KUBECONFIG=/etc/kubernetes/admin.conf
+> export KUBECONFIG=${HOME}/.kube/admin.conf
 > ```
 > While you are there you might as well add an alias for switching k8s contexts
 > `alias kubecon='kubectl config set-context --current --namespace'`
 {.is-warning}
 
 
-### Install Networking Components
-
-Install a CNI, in this case, we are using OVN. The [official installation documentation](https://github.com/kubeovn/kube-ovn/blob/master/docs/install.md) recommends using their script for installation. Normally it is not recommended to simply run a script from the internet, so in this case we are going to download and rename it so we know exactly what the script is for. This lab has ensured that it was installed with the expected values for POD_CIDR, SVC_CIDR and JOIN_CIDR. If you are planning to change any of these cider ranges, you will need to edit the variables inside the script in order to have a successful deployment of OVN.
 ```
 wget https://raw.githubusercontent.com/kubeovn/kube-ovn/release-1.10/dist/images/install.sh
 mv install.sh ovn-install.sh
